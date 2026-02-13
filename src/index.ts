@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import boardRoutes from './routes/board.routes';
+import listRoutes from './routes/list.routes';
+import cardRoutes from './routes/card.routes';
 
 dotenv.config();
 
@@ -30,6 +32,12 @@ app.use('/api/auth', authRoutes);
 
 // Board routes
 app.use('/api/boards', boardRoutes);
+
+// List routes
+app.use('/api', listRoutes);
+
+// Card routes
+app.use('/api', cardRoutes);
 
 // Start server
 app.listen(PORT, () => {
