@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import authRoutes from './routes/auth.routes';
 
 dotenv.config();
 
@@ -9,19 +10,22 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow frontend
+  origin: 'http://localhost:3000',
   credentials: true,
 }));
-app.use(express.json()); // Parse JSON bodies
+app.use(express.json());
 
-// Test endpoint
+// Routes
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     message: 'Backend is running!',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
+
+// Auth routes
+app.use('/api/auth', authRoutes);
 
 // Start server
 app.listen(PORT, () => {
