@@ -39,6 +39,11 @@ app.use('/api', listRoutes);
 // Card routes
 app.use('/api', cardRoutes);
 
+import commentRoutes from './routes/comment.routes';
+// ...
+app.use('/api', commentRoutes);
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on http://localhost:${PORT}`);
