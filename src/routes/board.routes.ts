@@ -5,7 +5,9 @@ import {
   createBoard,
   getBoardById,
   updateBoard,
-  deleteBoard
+  deleteBoard,
+  inviteMember,
+  removeMember
 } from '../controllers/board.controller';
 
 const router = Router();
@@ -27,5 +29,8 @@ router.put('/:id', updateBoard);
 
 // DELETE /api/boards/:id - Delete board
 router.delete('/:id', deleteBoard);
+
+router.post('/:id/members', inviteMember);
+router.delete('/:id/members/:userId', removeMember);
 
 export default router;

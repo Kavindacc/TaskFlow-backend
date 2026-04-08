@@ -1,26 +1,26 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest } from '../middleware/auth';
+import { Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import { AuthRequest } from "../middleware/auth";
 
 const prisma = new PrismaClient();
 
 // Get all boards where user is owner or member
-export const getAllBoards = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAllBoards = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
 
     if (!userId) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: "Unauthorized" });
       return;
     }
 
     // Get boards where user is owner OR member
     const boards = await prisma.board.findMany({
       where: {
-        OR: [
-          { ownerId: userId },
-          { members: { some: { userId: userId } } }
-        ]
+        OR: [{ ownerId: userId }, { members: { some: { userId: userId } } }],
       },
       include: {
         owner: {
@@ -28,7 +28,7 @@ export const getAllBoards = async (req: AuthRequest, res: Response): Promise<voi
             id: true,
             name: true,
             email: true,
-          }
+          },
         },
         members: {
           select: {
@@ -39,43 +39,46 @@ export const getAllBoards = async (req: AuthRequest, res: Response): Promise<voi
                 id: true,
                 name: true,
                 email: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         _count: {
           select: {
             lists: true,
             members: true,
-          }
-        }
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     res.json(boards);
   } catch (error) {
-    console.error('Get all boards error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Get all boards error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 // Create new board
-export const createBoard = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createBoard = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { title } = req.body;
 
     if (!userId) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: "Unauthorized" });
       return;
     }
 
     // Validation
-    if (!title || title.trim() === '') {
-      res.status(400).json({ message: 'Board title is required' });
+    if (!title || title.trim() === "") {
+      res.status(400).json({ message: "Board title is required" });
       return;
     }
 
@@ -87,9 +90,9 @@ export const createBoard = async (req: AuthRequest, res: Response): Promise<void
         members: {
           create: {
             userId: userId,
-            role: 'owner'
-          }
-        }
+            role: "owner",
+          },
+        },
       },
       include: {
         owner: {
@@ -97,7 +100,7 @@ export const createBoard = async (req: AuthRequest, res: Response): Promise<void
             id: true,
             name: true,
             email: true,
-          }
+          },
         },
         members: {
           select: {
@@ -108,31 +111,34 @@ export const createBoard = async (req: AuthRequest, res: Response): Promise<void
                 id: true,
                 name: true,
                 email: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
 
     res.status(201).json({
-      message: 'Board created successfully',
-      board
+      message: "Board created successfully",
+      board,
     });
   } catch (error) {
-    console.error('Create board error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Create board error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 // Get single board with lists and cards
-export const getBoardById = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getBoardById = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
 
     if (!userId) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: "Unauthorized" });
       return;
     }
 
@@ -145,7 +151,7 @@ export const getBoardById = async (req: AuthRequest, res: Response): Promise<voi
             id: true,
             name: true,
             email: true,
-          }
+          },
         },
         members: {
           select: {
@@ -156,78 +162,92 @@ export const getBoardById = async (req: AuthRequest, res: Response): Promise<voi
                 id: true,
                 name: true,
                 email: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         lists: {
           orderBy: {
-            order: 'asc'
+            order: "asc",
           },
           include: {
             cards: {
               orderBy: {
-                order: 'asc'
-              }
-            }
-          }
-        }
-      }
+                order: "asc",
+              },
+            },
+          },
+        },
+      },
     });
 
     // Check if board exists
     if (!board) {
-      res.status(404).json({ message: 'Board not found' });
+      res.status(404).json({ message: "Board not found" });
       return;
     }
 
     // Check if user has access (is owner or member)
-    const hasAccess = board.ownerId === userId || 
-                     board.members.some((member: { user: { id: string } }) => member.user.id === userId);
+    const hasAccess =
+      board.ownerId === userId ||
+      board.members.some(
+        (member: { user: { id: string } }) => member.user.id === userId,
+      );
 
     if (!hasAccess) {
-      res.status(403).json({ message: 'Access denied. You are not a member of this board.' });
+      res
+        .status(403)
+        .json({
+          message: "Access denied. You are not a member of this board.",
+        });
       return;
     }
 
     res.json(board);
   } catch (error) {
-    console.error('Get board by ID error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Get board by ID error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 // Update board
-export const updateBoard = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateBoard = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
     const { title } = req.body;
 
     if (!userId) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: "Unauthorized" });
       return;
     }
 
     // Validation
-    if (!title || title.trim() === '') {
-      res.status(400).json({ message: 'Board title is required' });
+    if (!title || title.trim() === "") {
+      res.status(400).json({ message: "Board title is required" });
       return;
     }
 
     // Check if board exists and user is owner
     const board = await prisma.board.findUnique({
       where: { id },
-      select: { ownerId: true }
+      select: { ownerId: true },
     });
 
     if (!board) {
-      res.status(404).json({ message: 'Board not found' });
+      res.status(404).json({ message: "Board not found" });
       return;
     }
 
     if (board.ownerId !== userId) {
-      res.status(403).json({ message: 'Access denied. Only the board owner can update the board.' });
+      res
+        .status(403)
+        .json({
+          message: "Access denied. Only the board owner can update the board.",
+        });
       return;
     }
 
@@ -241,7 +261,7 @@ export const updateBoard = async (req: AuthRequest, res: Response): Promise<void
             id: true,
             name: true,
             email: true,
-          }
+          },
         },
         members: {
           select: {
@@ -252,64 +272,170 @@ export const updateBoard = async (req: AuthRequest, res: Response): Promise<void
                 id: true,
                 name: true,
                 email: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
 
     res.json({
-      message: 'Board updated successfully',
-      board: updatedBoard
+      message: "Board updated successfully",
+      board: updatedBoard,
     });
   } catch (error) {
-    console.error('Update board error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Update board error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 // Delete board
-export const deleteBoard = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deleteBoard = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
 
     if (!userId) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: "Unauthorized" });
       return;
     }
 
     // Check if board exists and user is owner
     const board = await prisma.board.findUnique({
       where: { id },
-      select: { ownerId: true, title: true }
+      select: { ownerId: true, title: true },
     });
 
     if (!board) {
-      res.status(404).json({ message: 'Board not found' });
+      res.status(404).json({ message: "Board not found" });
       return;
     }
 
     if (board.ownerId !== userId) {
-      res.status(403).json({ message: 'Access denied. Only the board owner can delete the board.' });
+      res
+        .status(403)
+        .json({
+          message: "Access denied. Only the board owner can delete the board.",
+        });
       return;
     }
 
     // Delete board (cascade will delete lists, cards, comments, and members)
     await prisma.board.delete({
-      where: { id }
+      where: { id },
     });
 
     res.json({
-      message: 'Board deleted successfully',
+      message: "Board deleted successfully",
       deletedBoard: {
         id,
-        title: board.title
-      }
+        title: board.title,
+      },
     });
   } catch (error) {
-    console.error('Delete board error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Delete board error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// POST /api/boards/:id/members — invite by email
+export const inviteMember = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const { id } = req.params;
+    const { email } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    if (!email) {
+      res.status(400).json({ message: "Email is required" });
+      return;
+    }
+
+    const board = await prisma.board.findUnique({ where: { id } });
+    if (!board) {
+      res.status(404).json({ message: "Board not found" });
+      return;
+    }
+    if (board.ownerId !== userId) {
+      res.status(403).json({ message: "Only the owner can invite members" });
+      return;
+    }
+
+    // Find user by email
+    const invitee = await prisma.user.findUnique({ where: { email } });
+    if (!invitee) {
+      res
+        .status(404)
+        .json({ message: "No user found with that email address" });
+      return;
+    }
+
+    // Check not already a member
+    const existing = await prisma.boardMember.findFirst({
+      where: { boardId: id, userId: invitee.id },
+    });
+    if (existing) {
+      res
+        .status(400)
+        .json({ message: "User is already a member of this board" });
+      return;
+    }
+
+    const member = await prisma.boardMember.create({
+      data: { boardId: id, userId: invitee.id, role: "member" },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+
+    res.status(201).json({ message: "Member invited successfully", member });
+  } catch (error) {
+    console.error("Invite member error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// DELETE /api/boards/:id/members/:userId — remove member
+export const removeMember = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const { id, userId: targetUserId } = req.params;
+
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const board = await prisma.board.findUnique({ where: { id } });
+    if (!board) {
+      res.status(404).json({ message: "Board not found" });
+      return;
+    }
+    if (board.ownerId !== userId) {
+      res.status(403).json({ message: "Only the owner can remove members" });
+      return;
+    }
+    if (targetUserId === userId) {
+      res.status(400).json({ message: "Cannot remove yourself as owner" });
+      return;
+    }
+
+    await prisma.boardMember.deleteMany({
+      where: { boardId: id, userId: targetUserId },
+    });
+    res.json({ message: "Member removed successfully" });
+  } catch (error) {
+    console.error("Remove member error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
