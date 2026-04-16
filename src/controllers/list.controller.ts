@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
+import { emitBoardEvent } from '../services/socket.service';
 
 const prisma = new PrismaClient();
 
@@ -73,6 +74,8 @@ export const createList = async (req: AuthRequest, res: Response): Promise<void>
       message: 'List created successfully',
       list
     });
+
+    emitBoardEvent(boardId, 'list:created', { list });
   } catch (error) {
     console.error('Create list error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -140,6 +143,8 @@ export const updateList = async (req: AuthRequest, res: Response): Promise<void>
       message: 'List updated successfully',
       list: updatedList
     });
+
+    emitBoardEvent(updatedList.boardId, 'list:updated', { list: updatedList });
   } catch (error) {
     console.error('Update list error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -192,11 +197,10 @@ export const deleteList = async (req: AuthRequest, res: Response): Promise<void>
 
     res.json({
       message: 'List deleted successfully',
-      deletedList: {
-        id,
-        title: list.title
-      }
+      deletedList: { id, title: list.title }
     });
+
+    emitBoardEvent(list.boardId, 'list:deleted', { listId: id });
   } catch (error) {
     console.error('Delete list error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -269,6 +273,8 @@ export const reorderLists = async (req: AuthRequest, res: Response): Promise<voi
     res.json({
       message: 'Lists reordered successfully'
     });
+
+    emitBoardEvent(firstList.boardId, 'list:reordered', { lists });
   } catch (error) {
     console.error('Reorder lists error:', error);
     res.status(500).json({ message: 'Server error' });

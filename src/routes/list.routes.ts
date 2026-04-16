@@ -15,13 +15,13 @@ router.use(authenticateToken);
 // POST /api/boards/:boardId/lists - Create list in board
 router.post('/boards/:boardId/lists', createList);
 
+// PUT /api/lists/reorder - Reorder multiple lists (MUST be before /:id)
+router.put('/lists/reorder', reorderLists);
+
 // PUT /api/lists/:id - Update list title
 router.put('/lists/:id', updateList);
 
 // DELETE /api/lists/:id - Delete list
 router.delete('/lists/:id', deleteList);
-
-// PUT /api/lists/reorder - Reorder multiple lists
-router.put('/lists/reorder', reorderLists);
 
 export default router;

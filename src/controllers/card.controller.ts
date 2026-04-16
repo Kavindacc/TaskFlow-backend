@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
+import { emitBoardEvent } from '../services/socket.service';
 
 const prisma = new PrismaClient();
 
@@ -75,6 +76,9 @@ export const createCard = async (req: AuthRequest, res: Response): Promise<void>
       message: 'Card created successfully',
       card
     });
+
+    // Emit real-time event to all board members
+    emitBoardEvent(list.boardId, 'card:created', { card, listId });
   } catch (error) {
     console.error('Create card error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -224,6 +228,9 @@ export const updateCard = async (req: AuthRequest, res: Response): Promise<void>
       message: 'Card updated successfully',
       card: updatedCard
     });
+
+    // Emit real-time event
+    emitBoardEvent(card.list.boardId, 'card:updated', { card: updatedCard });
   } catch (error) {
     console.error('Update card error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -280,11 +287,11 @@ export const deleteCard = async (req: AuthRequest, res: Response): Promise<void>
 
     res.json({
       message: 'Card deleted successfully',
-      deletedCard: {
-        id,
-        title: card.title
-      }
+      deletedCard: { id, title: card.title }
     });
+
+    // Emit real-time event
+    emitBoardEvent(card.list.boardId, 'card:deleted', { cardId: id, listId: card.listId });
   } catch (error) {
     console.error('Delete card error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -381,6 +388,14 @@ export const moveCard = async (req: AuthRequest, res: Response): Promise<void> =
     res.json({
       message: 'Card moved successfully',
       card: movedCard
+    });
+
+    // Emit real-time event
+    emitBoardEvent(card.list.boardId, 'card:moved', {
+      card: movedCard,
+      sourceListId: card.listId,
+      destListId: listId,
+      order,
     });
   } catch (error) {
     console.error('Move card error:', error);
