@@ -18,6 +18,7 @@ model User {
   ownedBoards  Board[]        @relation("BoardOwner")
   boardMembers BoardMember[]
   comments     Comment[]
+  assignedCards Card[]        @relation("CardAssignee")
 }
 
 model Board {
@@ -65,11 +66,14 @@ model Card {
   order       Int
   labels      String[]  @default([])
   dueDate     DateTime?
+  isComplete  Boolean   @default(false)
+  assigneeId  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   list     List      @relation(fields: [listId], references: [id], onDelete: Cascade)
   comments Comment[]
+  assignee User?     @relation("CardAssignee", fields: [assigneeId], references: [id])
 }
 
 model Comment {
