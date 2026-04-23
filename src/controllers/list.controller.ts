@@ -87,7 +87,7 @@ export const updateList = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
-    const { title, isComplete, assigneeId } = req.body;
+    const { title, isComplete, assigneeId, priority, dueDate, effortTotal, effortLogged } = req.body;
 
     if (!userId) {
       res.status(401).json({ message: 'Unauthorized' });
@@ -95,7 +95,15 @@ export const updateList = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Validation
-    const updateData: { title?: string; isComplete?: boolean; assigneeId?: string | null } = {};
+    const updateData: {
+      title?: string;
+      isComplete?: boolean;
+      assigneeId?: string | null;
+      priority?: string;
+      dueDate?: Date | null;
+      effortTotal?: number;
+      effortLogged?: number;
+    } = {};
 
     if (title !== undefined) {
       if (title.trim() === '') {
@@ -104,14 +112,12 @@ export const updateList = async (req: AuthRequest, res: Response): Promise<void>
       }
       updateData.title = title.trim();
     }
-    
-    if (isComplete !== undefined) {
-      updateData.isComplete = isComplete;
-    }
-    
-    if (assigneeId !== undefined) {
-      updateData.assigneeId = assigneeId === '' ? null : assigneeId;
-    }
+    if (isComplete !== undefined)   updateData.isComplete   = isComplete;
+    if (assigneeId !== undefined)   updateData.assigneeId   = assigneeId === '' ? null : assigneeId;
+    if (priority !== undefined)     updateData.priority     = priority;
+    if (dueDate !== undefined)      updateData.dueDate      = dueDate ? new Date(dueDate) : null;
+    if (effortTotal !== undefined)  updateData.effortTotal  = Number(effortTotal);
+    if (effortLogged !== undefined) updateData.effortLogged = Number(effortLogged);
 
     // Get list with board info
     const list = await prisma.list.findUnique({
