@@ -154,7 +154,7 @@ export const updateCard = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
-    const { title, description, labels, dueDate } = req.body;
+    const { title, description, labels, dueDate, isComplete, assigneeId } = req.body;
 
     if (!userId) {
       res.status(401).json({ message: 'Unauthorized' });
@@ -199,6 +199,8 @@ export const updateCard = async (req: AuthRequest, res: Response): Promise<void>
       description?: string | null;
       labels?: string[];
       dueDate?: Date | null;
+      isComplete?: boolean;
+       assigneeId?: string | null;
     } = {};
 
     if (title !== undefined) {
@@ -216,6 +218,13 @@ export const updateCard = async (req: AuthRequest, res: Response): Promise<void>
     }
     if (dueDate !== undefined) {
       updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    }
+    if (isComplete !== undefined) {
+      updateData.isComplete = isComplete;
+    }
+    if (assigneeId !== undefined) {
+      // If the frontend sends an empty string or null, save it as null (unassigned)
+      updateData.assigneeId = assigneeId === '' ? null : assigneeId; 
     }
 
     // Update card

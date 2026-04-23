@@ -82,12 +82,12 @@ export const createList = async (req: AuthRequest, res: Response): Promise<void>
   }
 };
 
-// Update list title
+// Update list details
 export const updateList = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
-    const { title } = req.body;
+    const { title, isComplete, assigneeId, priority, dueDate, effortTotal, effortLogged } = req.body;
 
     if (!userId) {
       res.status(401).json({ message: 'Unauthorized' });
@@ -95,10 +95,29 @@ export const updateList = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Validation
-    if (!title || title.trim() === '') {
-      res.status(400).json({ message: 'List title is required' });
-      return;
+    const updateData: {
+      title?: string;
+      isComplete?: boolean;
+      assigneeId?: string | null;
+      priority?: string;
+      dueDate?: Date | null;
+      effortTotal?: number;
+      effortLogged?: number;
+    } = {};
+
+    if (title !== undefined) {
+      if (title.trim() === '') {
+        res.status(400).json({ message: 'List title cannot be empty' });
+        return;
+      }
+      updateData.title = title.trim();
     }
+    if (isComplete !== undefined)   updateData.isComplete   = isComplete;
+    if (assigneeId !== undefined)   updateData.assigneeId   = assigneeId === '' ? null : assigneeId;
+    if (priority !== undefined)     updateData.priority     = priority;
+    if (dueDate !== undefined)      updateData.dueDate      = dueDate ? new Date(dueDate) : null;
+    if (effortTotal !== undefined)  updateData.effortTotal  = Number(effortTotal);
+    if (effortLogged !== undefined) updateData.effortLogged = Number(effortLogged);
 
     // Get list with board info
     const list = await prisma.list.findUnique({
@@ -131,7 +150,7 @@ export const updateList = async (req: AuthRequest, res: Response): Promise<void>
     // Update list
     const updatedList = await prisma.list.update({
       where: { id },
-      data: { title: title.trim() },
+      data: updateData,
       include: {
         cards: {
           orderBy: { order: 'asc' }
