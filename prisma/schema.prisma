@@ -19,6 +19,7 @@ model User {
   boardMembers BoardMember[]
   comments     Comment[]
   assignedCards Card[]        @relation("CardAssignee")
+  assignedLists List[]        @relation("ListAssignee")
 }
 
 model Board {
@@ -56,6 +57,9 @@ model List {
 
   board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   cards Card[]
+  isComplete Boolean @default(false)
+  assigneeId String?
+  assignee   User?   @relation("ListAssignee", fields: [assigneeId], references: [id])
 }
 
 model Card {
