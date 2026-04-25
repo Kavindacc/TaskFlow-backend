@@ -404,7 +404,7 @@ export const moveCard = async (req: AuthRequest, res: Response): Promise<void> =
       card: movedCard,
       sourceListId: card.listId,
       destListId: listId,
-      order,
+      order,  
     });
   } catch (error) {
     console.error('Move card error:', error);

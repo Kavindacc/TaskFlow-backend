@@ -49,6 +49,13 @@ export const getAllBoards = async (
             members: true,
           },
         },
+        lists: {
+          select: {
+            _count: {
+              select: { cards: true },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
